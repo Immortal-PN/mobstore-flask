@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div class="card">
+
+<h2>Purchase Invoice</h2>
+
+<p><b>IMEI</b>: {{order.imei}}</p>
+
+<p><b>Purchase Date</b>: {{order.purchase}}</p>
+
+<p><b>Warranty Expiry</b>: {{order.warranty}}</p>
+
+<hr>
+
+<p>Please take a screenshot of this invoice for warranty claims.</p>
+
+</div>
+
+
+{% endblock %}

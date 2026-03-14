@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Service Center</h1>
+
+<form method="POST">
+
+<input name="imei" placeholder="Enter IMEI">
+
+<textarea name="problem" placeholder="Describe Issue"></textarea>
+
+<button>Submit</button>
+
+</form>
+
+<p>{{message}}</p>
+
+{% endblock %}

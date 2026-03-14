@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Your Cart</h1>
+
+<table>
+
+<tr>
+<th>Product</th>
+<th>Price</th>
+<th>Buy</th>
+</tr>
+
+{% for p in products %}
+
+<tr>
+
+<td>{{p[1]}} {{p[2]}}</td>
+
+<td>₹{{p[3]}}</td>
+
+<td>
+
+<a href="/checkout/{{p[0]}}">
+<button>Checkout</button>
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% endblock %}

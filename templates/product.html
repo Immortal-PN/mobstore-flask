@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+
+<img src="/static/uploads/{{product[4]}}">
+
+<h2>{{product[1]}} {{product[2]}}</h2>
+
+<p>Price ₹{{product[3]}}</p>
+
+<a href="/add_to_cart/{{product[0]}}">
+<button>Add To Cart</button>
+</a>
+
+<a href="/checkout/{{product[0]}}">
+<button>Buy Now</button>
+</a>
+
+</div>
+
+{% endblock %}
