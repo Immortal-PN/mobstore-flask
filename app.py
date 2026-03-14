@@ -1,12 +1,11 @@
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
+import psycopg2
 import random
 import datetime
 import os
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-
 app.secret_key = "supersecretkey"
 
 UPLOAD_FOLDER = "static/uploads"
@@ -18,7 +17,9 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # ----------------------------
 
 def connect():
-    return sqlite3.connect("database.db")
+    database_url = os.environ.get("DATABASE_URL")
+    conn = psycopg2.connect(database_url)
+    return conn
 
 
 # ----------------------------
@@ -45,11 +46,15 @@ def landing():
 @app.route("/store")
 def store():
 
-    db = connect()
+    conn = connect()
+    cur = conn.cursor()
 
-    products = db.execute(
-        "SELECT * FROM products"
-    ).fetchall()
+    cur.execute("SELECT * FROM products")
+
+    products = cur.fetchall()
+
+    cur.close()
+    conn.close()
 
     return render_template("home.html", products=products)
 
@@ -61,12 +66,15 @@ def store():
 @app.route("/product/<int:id>")
 def product(id):
 
-    db = connect()
+    conn = connect()
+    cur = conn.cursor()
 
-    product = db.execute(
-        "SELECT * FROM products WHERE id=?",
-        (id,)
-    ).fetchone()
+    cur.execute("SELECT * FROM products WHERE id=%s", (id,))
+
+    product = cur.fetchone()
+
+    cur.close()
+    conn.close()
 
     return render_template("product.html", product=product)
 
@@ -82,7 +90,6 @@ def add_to_cart(id):
         session["cart"] = []
 
     cart = session["cart"]
-
     cart.append(id)
 
     session["cart"] = cart
@@ -102,19 +109,21 @@ def cart():
 
     ids = session["cart"]
 
-    db = connect()
+    conn = connect()
+    cur = conn.cursor()
 
     products = []
 
     for i in ids:
 
-        product = db.execute(
-            "SELECT * FROM products WHERE id=?",
-            (i,)
-        ).fetchone()
+        cur.execute("SELECT * FROM products WHERE id=%s", (i,))
+        product = cur.fetchone()
 
         if product:
             products.append(product)
+
+    cur.close()
+    conn.close()
 
     return render_template("cart.html", products=products)
 
@@ -129,17 +138,20 @@ def checkout(id):
     imei = generate_imei()
 
     purchase_date = datetime.date.today()
-
     warranty = purchase_date + datetime.timedelta(days=365)
 
-    db = connect()
+    conn = connect()
+    cur = conn.cursor()
 
-    db.execute(
-        "INSERT INTO orders(product_id, imei, purchase_date, warranty_expiry) VALUES(?,?,?,?)",
+    cur.execute(
+        "INSERT INTO orders(product_id, imei, purchase_date, warranty_expiry) VALUES(%s,%s,%s,%s)",
         (id, imei, purchase_date, warranty)
     )
 
-    db.commit()
+    conn.commit()
+
+    cur.close()
+    conn.close()
 
     order = {
         "imei": imei,
@@ -163,14 +175,18 @@ def register():
         email = request.form["email"]
         password = request.form["password"]
 
-        db = connect()
+        conn = connect()
+        cur = conn.cursor()
 
-        db.execute(
-            "INSERT INTO users(name,email,password) VALUES(?,?,?)",
+        cur.execute(
+            "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
             (name, email, password)
         )
 
-        db.commit()
+        conn.commit()
+
+        cur.close()
+        conn.close()
 
         return redirect("/login")
 
@@ -189,12 +205,18 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
 
-        db = connect()
+        conn = connect()
+        cur = conn.cursor()
 
-        user = db.execute(
-            "SELECT * FROM users WHERE email=? AND password=?",
+        cur.execute(
+            "SELECT * FROM users WHERE email=%s AND password=%s",
             (email, password)
-        ).fetchone()
+        )
+
+        user = cur.fetchone()
+
+        cur.close()
+        conn.close()
 
         if user:
             return redirect("/store")
@@ -216,25 +238,28 @@ def service():
         imei = request.form["imei"]
         problem = request.form["problem"]
 
-        db = connect()
+        conn = connect()
+        cur = conn.cursor()
 
-        order = db.execute(
-            "SELECT warranty_expiry FROM orders WHERE imei=?",
+        cur.execute(
+            "SELECT warranty_expiry FROM orders WHERE imei=%s",
             (imei,)
-        ).fetchone()
+        )
+
+        order = cur.fetchone()
 
         if order:
 
-            expiry = datetime.datetime.strptime(order[0], "%Y-%m-%d").date()
+            expiry = datetime.datetime.strptime(str(order[0]), "%Y-%m-%d").date()
 
             if expiry >= datetime.date.today():
 
-                db.execute(
-                    "INSERT INTO service_requests(imei,problem,request_date) VALUES(?,?,?)",
+                cur.execute(
+                    "INSERT INTO service_requests(imei,problem,request_date) VALUES(%s,%s,%s)",
                     (imei, problem, datetime.date.today())
                 )
 
-                db.commit()
+                conn.commit()
 
                 message = "Warranty valid. Service request booked."
 
@@ -243,6 +268,9 @@ def service():
 
         else:
             message = "Invalid IMEI."
+
+        cur.close()
+        conn.close()
 
     return render_template("service.html", message=message)
 
@@ -272,7 +300,8 @@ def admin():
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 def admin_dashboard():
 
-    db = connect()
+    conn = connect()
+    cur = conn.cursor()
 
     if request.method == "POST":
 
@@ -286,28 +315,41 @@ def admin_dashboard():
 
         image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-        db.execute(
-            "INSERT INTO products(brand,model,price,image) VALUES(?,?,?,?)",
+        cur.execute(
+            "INSERT INTO products(brand,model,price,image) VALUES(%s,%s,%s,%s)",
             (brand, model, price, filename)
         )
 
-        db.commit()
+        conn.commit()
 
-    products = db.execute("SELECT * FROM products").fetchall()
+    cur.execute("SELECT * FROM products")
+    products = cur.fetchall()
+
+    cur.close()
+    conn.close()
 
     return render_template("admin_dashboard.html", products=products)
+
+
+# ----------------------------
+# DELETE PRODUCT
+# ----------------------------
 
 @app.route("/delete_product/<int:id>")
 def delete_product(id):
 
-    db = connect()
+    conn = connect()
+    cur = conn.cursor()
 
-    db.execute(
-        "DELETE FROM products WHERE id=?",
+    cur.execute(
+        "DELETE FROM products WHERE id=%s",
         (id,)
     )
 
-    db.commit()
+    conn.commit()
+
+    cur.close()
+    conn.close()
 
     return redirect("/admin_dashboard")
 
