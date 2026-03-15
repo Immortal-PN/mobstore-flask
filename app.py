@@ -290,7 +290,7 @@ def register():
         cur = conn.cursor()
 
         cur.execute(
-            "INSERT INTO users(name,email,password_hash) VALUES(%s,%s,%s)",
+            "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
             (name, email, password)
         )
 
@@ -322,7 +322,7 @@ def login():
         cur = conn.cursor()
 
         cur.execute(
-            "SELECT id,email,password_hash FROM users WHERE email=%s",
+            "SELECT id,email,password FROM users WHERE email=%s",
             (email,)
         )
 
