@@ -61,6 +61,35 @@ def store():
     return render_template("home.html",products=products)
 
 
+
+@app.route("/service", methods=["GET", "POST"])
+def service():
+
+    message = ""
+
+    if request.method == "POST":
+        imei = request.form.get("imei")
+        issue = request.form.get("problem")
+
+        conn = connect()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO service_requests (imei, issue, status)
+            VALUES (%s, %s, %s)
+        """, (imei, issue, "Pending"))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        message = "Service request submitted successfully."
+
+    return render_template("service.html", message=message)
+
+
+
+
 # ==============================
 # PRODUCT
 # ==============================
@@ -137,11 +166,11 @@ def cart():
     cur=conn.cursor()
 
     cur.execute("""
-        SELECT products.id,products.brand,products.model,products.price,products.image,cart.quantity
+        SELECT products.id,products.brand,products.model,products.price,products.image_data,cart.quantity
         FROM cart
         JOIN products ON cart.product_id=products.id
         WHERE cart.user_id=%s
-    """,(user_id,))
+        """,(user_id,))
 
     rows=cur.fetchall()
 
@@ -154,13 +183,13 @@ def cart():
         total+=subtotal
 
         items.append({
-            "id":r[0],
-            "brand":r[1],
-            "model":r[2],
-            "price":r[3],
-            "image":r[4],
-            "qty":r[5],
-            "subtotal":subtotal
+        "id": r[0],
+        "brand": r[1],
+        "model": r[2],
+        "price": r[3],
+        "image_data": r[4],
+        "qty": r[5],
+        "subtotal": subtotal
         })
 
     cur.close()
