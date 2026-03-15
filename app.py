@@ -62,32 +62,27 @@ def store():
 
 
 
-@app.route("/service", methods=["GET", "POST"])
+@app.route("/service", methods=["GET","POST"])
 def service():
 
     message = ""
 
     if request.method == "POST":
+
         imei = request.form.get("imei")
-
-        cur.execute("SELECT * FROM orders WHERE imei=%s",(imei,))
-        valid = cur.fetchone()
-
-        if not valid:
-            message = "Invalid IMEI. Warranty not found."
-            return render_template("service.html",message=message)
-
         issue = request.form.get("problem")
 
         conn = connect()
         cur = conn.cursor()
 
         cur.execute("""
-            INSERT INTO service_requests (imei, issue, status)
-            VALUES (%s, %s, %s)
-        """, (imei, issue, "Pending"))
+        INSERT INTO service_requests
+        (imei, issue, status, created_at)
+        VALUES (%s,%s,%s,%s)
+        """,(imei,issue,"Pending",datetime.datetime.now()))
 
         conn.commit()
+
         cur.close()
         conn.close()
 
