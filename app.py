@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session
-import psycopg2
 import base64
+import psycopg2
 import os
 import random
 import datetime
@@ -34,6 +34,19 @@ def generate_imei():
 
 
 
+
+
+
+
+@app.route("/migrate_add_image_data")
+def migrate_add_image_data():
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT;")
+    conn.commit()
+    cur.close()
+    conn.close()
+    return "OK"
 
 
 @app.route("/update_products_table")

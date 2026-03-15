@@ -39,6 +39,8 @@ box-shadow:0 5px 12px rgba(0,0,0,0.08);
 width:60px;
 height:60px;
 object-fit:contain;
+border:1px solid #eee;
+border-radius:5px;
 }
 
 </style>
@@ -47,7 +49,6 @@ object-fit:contain;
 <body>
 
 <div class="container-fluid">
-
 <div class="row">
 
 
@@ -75,46 +76,29 @@ object-fit:contain;
 
 
 
-<!-- ANALYTICS CARDS -->
+<!-- ANALYTICS -->
 
 <div class="row mb-4">
 
 <div class="col-md-4">
-
 <div class="card-box text-center">
-
 <h5>Total Users</h5>
-
 <h3>{{stats.users}}</h3>
-
 </div>
-
 </div>
-
 
 <div class="col-md-4">
-
 <div class="card-box text-center">
-
 <h5>Total Orders</h5>
-
 <h3>{{stats.orders}}</h3>
-
 </div>
-
 </div>
-
 
 <div class="col-md-4">
-
 <div class="card-box text-center">
-
 <h5>Total Revenue</h5>
-
 <h3>₹{{stats.revenue}}</h3>
-
 </div>
-
 </div>
 
 </div>
@@ -166,7 +150,7 @@ object-fit:contain;
 </div>
 
 <div class="col-md-3">
-<input type="file" name="image" class="form-control">
+<input type="file" name="image" class="form-control" required>
 </div>
 
 </div>
@@ -179,7 +163,7 @@ object-fit:contain;
 
 
 
-<!-- PRODUCT TABLE -->
+<!-- PRODUCT INVENTORY -->
 
 <div class="card-box">
 
@@ -213,21 +197,21 @@ object-fit:contain;
 <td>{{product[0]}}</td>
 
 <td>
+
+{% if product[9] %}
 <img src="data:image/jpeg;base64,{{product[9]}}" class="product-img">
+{% else %}
+<img src="https://via.placeholder.com/60" class="product-img">
+{% endif %}
+
 </td>
 
 <td>{{product[1]}}</td>
-
 <td>{{product[2]}}</td>
-
 <td>₹{{product[3]}}</td>
-
 <td>{{product[5]}}</td>
-
 <td>{{product[6]}}</td>
-
 <td>{{product[7]}}</td>
-
 <td>{{product[8]}}</td>
 
 <td>
@@ -248,10 +232,9 @@ Delete
 
 </div>
 
-</div>
 
 </div>
-
+</div>
 </div>
 
 </body>
