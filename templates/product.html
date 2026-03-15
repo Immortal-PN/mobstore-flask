@@ -1,23 +1,212 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
-{% block content %}
+<meta charset="UTF-8">
+<title>{{product[2]}} - MobStore</title>
 
-<div class="card">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<img src="/static/uploads/{{product[4]}}">
+<style>
 
-<h2>{{product[1]}} {{product[2]}}</h2>
+body{
+background:#f5f6fa;
+font-family:Arial;
+}
 
-<p>Price ₹{{product[3]}}</p>
+.navbar{
+background:#111;
+}
 
-<a href="/add_to_cart/{{product[0]}}">
-<button>Add To Cart</button>
+.navbar a{
+color:white !important;
+}
+
+.product-container{
+
+background:white;
+padding:40px;
+border-radius:12px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);
+
+}
+
+.product-image{
+
+width:100%;
+height:420px;
+object-fit:contain;
+
+}
+
+.price{
+
+font-size:28px;
+font-weight:bold;
+color:#27ae60;
+
+}
+
+.brand{
+
+color:#777;
+font-size:14px;
+}
+
+.stock{
+
+color:#2ecc71;
+font-weight:bold;
+}
+
+.btn-buy{
+
+background:#111;
+color:white;
+
+}
+
+.btn-buy:hover{
+
+background:#333;
+color:white;
+
+}
+
+.spec-box{
+
+background:#fafafa;
+border-radius:8px;
+padding:20px;
+margin-top:25px;
+
+}
+
+</style>
+
+</head>
+<body>
+
+
+<!-- NAVBAR -->
+
+<nav class="navbar navbar-expand-lg">
+
+<div class="container">
+
+<a class="navbar-brand text-white" href="/">MobStore</a>
+
+<div>
+
+<a href="/store" class="me-3">Store</a>
+<a href="/cart" class="me-3">Cart</a>
+
+{% if session.user_id %}
+<a href="/logout">Logout</a>
+{% else %}
+<a href="/login">Login</a>
+{% endif %}
+
+</div>
+
+</div>
+
+</nav>
+
+
+
+<div class="container mt-5">
+
+<div class="product-container">
+
+<div class="row">
+
+
+<!-- PRODUCT IMAGE -->
+
+<div class="col-md-6">
+
+<img
+src="/static/uploads/{{product[5]}}"
+class="product-image">
+
+</div>
+
+
+
+<!-- PRODUCT DETAILS -->
+
+<div class="col-md-6">
+
+<p class="brand">{{product[1]}}</p>
+
+<h2>{{product[2]}}</h2>
+
+<p class="price mt-3">₹{{product[3]}}</p>
+
+<p class="stock mt-2">
+
+{% if product[4] > 0 %}
+In Stock
+{% else %}
+Out Of Stock
+{% endif %}
+
+</p>
+
+
+<div class="mt-4">
+
+<a
+href="/add_to_cart/{{product[0]}}"
+class="btn btn-dark me-2">
+
+Add To Cart
+
 </a>
 
-<a href="/checkout/{{product[0]}}">
-<button>Buy Now</button>
+<a
+href="/checkout"
+class="btn btn-buy">
+
+Buy Now
+
 </a>
 
 </div>
 
-{% endblock %}
+
+
+<!-- PRODUCT INFO -->
+
+<div class="spec-box">
+
+<h5>Product Information</h5>
+
+<ul>
+
+<li>Brand : {{product[1]}}</li>
+
+<li>Model : {{product[2]}}</li>
+
+<li>Price : ₹{{product[3]}}</li>
+
+<li>Available Stock : {{product[4]}}</li>
+
+<li>Official MobStore Warranty</li>
+
+</ul>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
