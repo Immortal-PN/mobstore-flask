@@ -2,59 +2,44 @@
 
 {% block content %}
 
-<h1 class="admin-title">Admin Dashboard</h1>
+<h2>Admin Dashboard</h2>
 
-<div class="admin-container">
+<a href="/admin_logout">Logout</a>
 
-<!-- PRODUCT FORM CARD -->
+<hr>
 
-<div class="admin-card">
+<h3>Add Product</h3>
 
-<h2>Add New Product</h2>
+<form method="POST" enctype="multipart/form-data">
 
-<form method="POST" enctype="multipart/form-data" class="admin-form">
+<input name="brand" placeholder="Brand" required>
+<br><br>
 
-<div class="form-group">
-<label for="brand">Brand Name</label>
-<input type="text" id="brand" name="brand" placeholder="Enter brand name" required>
-</div>
+<input name="model" placeholder="Model" required>
+<br><br>
 
-<div class="form-group">
-<label for="model">Model Name</label>
-<input type="text" id="model" name="model" placeholder="Enter model name" required>
-</div>
+<input name="price" placeholder="Price" required>
+<br><br>
 
-<div class="form-group">
-<label for="price">Price (₹)</label>
-<input type="number" id="price" name="price" placeholder="Enter price" required>
-</div>
+<input type="file" name="image" required>
+<br><br>
 
-<div class="form-group">
-<label for="image">Product Image</label>
-<input type="file" id="image" name="image" required>
-</div>
-
-<button type="submit">Add Product</button>
+<button>Add Product</button>
 
 </form>
 
-</div>
+<hr>
 
-<!-- PRODUCT TABLE CARD -->
+<h3>Products</h3>
 
-<div class="admin-card">
-
-<h2>Available Products</h2>
-
-<table class="admin-table">
+<table border="1">
 
 <tr>
 <th>ID</th>
 <th>Brand</th>
 <th>Model</th>
 <th>Price</th>
-<th>Image</th>
-<th>Actions</th>
+<th>Action</th>
 </tr>
 
 {% for p in products %}
@@ -62,27 +47,12 @@
 <tr>
 
 <td>{{p[0]}}</td>
-
 <td>{{p[1]}}</td>
-
 <td>{{p[2]}}</td>
-
-<td>₹{{p[3]}}</td>
-
-<td>
-<img src="/static/uploads/{{p[4]}}" class="table-img">
-</td>
+<td>{{p[3]}}</td>
 
 <td>
-
-<a href="/edit_product/{{p[0]}}">
-<button>Edit</button>
-</a>
-
-<a href="/delete_product/{{p[0]}}">
-<button style="background:#ff4b5c;">Delete</button>
-</a>
-
+<a href="/delete_product/{{p[0]}}">Delete</a>
 </td>
 
 </tr>
@@ -90,9 +60,5 @@
 {% endfor %}
 
 </table>
-
-</div>
-
-</div>
 
 {% endblock %}
