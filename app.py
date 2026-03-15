@@ -10,6 +10,8 @@ app.secret_key = "supersecretkey"
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 # ----------------------------
 # DATABASE CONNECTION
@@ -90,7 +92,11 @@ def admin_dashboard():
 
         image = request.files["image"]
 
-        filename = secure_filename(image.filename)
+        filename = ""
+
+        if image and image.filename != "":
+
+         filename = secure_filename(image.filename)
 
         image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
