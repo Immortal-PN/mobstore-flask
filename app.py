@@ -6,6 +6,9 @@ import os
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from werkzeug.security import generate_password_hash
+print(generate_password_hash("admin123"))
+
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
@@ -411,10 +414,7 @@ def delete_product(id):
 
     return redirect("/admin_dashboard")
 
-@app.route("/setup_db")
-def setup_db():
-    init_db()
-    return "Database initialized"
+
 
 
 # ----------------------------
