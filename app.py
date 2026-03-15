@@ -32,55 +32,6 @@ def generate_imei():
     return str(random.randint(100000000000000,999999999999999))
 
 
-
-
-
-
-
-
-@app.route("/migrate_add_image_data")
-def migrate_add_image_data():
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT;")
-    conn.commit()
-    cur.close()
-    conn.close()
-    return "OK"
-
-
-@app.route("/update_products_table")
-def update_products_table():
-
-    conn = connect()
-    cur = conn.cursor()
-
-    cur.execute("""
-        ALTER TABLE products
-        ADD COLUMN IF NOT EXISTS image_data TEXT;
-    """)
-
-    conn.commit()
-
-    cur.close()
-    conn.close()
-
-    return "Products table updated successfully!"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ==============================
 # LANDING
 # ==============================
