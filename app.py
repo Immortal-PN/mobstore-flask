@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session
 import psycopg2
+import base64
 import os
 import random
 import datetime
@@ -29,6 +30,42 @@ def connect():
 
 def generate_imei():
     return str(random.randint(100000000000000,999999999999999))
+
+
+
+
+
+
+@app.route("/update_products_table")
+def update_products_table():
+
+    conn = connect()
+    cur = conn.cursor()
+
+    cur.execute("""
+        ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS image_data TEXT;
+    """)
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return "Products table updated successfully!"
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ==============================
