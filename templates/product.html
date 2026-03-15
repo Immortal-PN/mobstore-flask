@@ -138,19 +138,13 @@ class="product-image">
 
 <div class="col-md-6">
 
+<img src="/static/uploads/{{product[4]}}" class="product-image">
+
 <p class="brand">{{product[1]}}</p>
 
 <h2>{{product[2]}}</h2>
 
 <p class="price mt-3">₹{{product[3]}}</p>
-
-<p class="stock mt-2">
-
-{% if product[4] > 0 %}
-In Stock
-{% else %}
-Out Of Stock
-{% endif %}
 
 </p>
 
@@ -172,6 +166,28 @@ class="btn btn-buy">
 Buy Now
 
 </a>
+
+</div>
+
+<div class="spec-box">
+
+<h5>Specifications</h5>
+
+<ul>
+
+<li>Brand : {{product[1]}}</li>
+
+<li>Model : {{product[2]}}</li>
+
+<li>RAM : {{product[5]}}</li>
+
+<li>Storage : {{product[6]}}</li>
+
+<li>Battery : {{product[7]}}</li>
+
+<li>Category : {{product[8]}}</li>
+
+</ul>
 
 </div>
 

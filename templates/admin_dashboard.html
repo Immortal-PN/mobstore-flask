@@ -140,60 +140,41 @@ object-fit:contain;
 <div class="row">
 
 <div class="col-md-3">
-
-<input
-type="text"
-name="brand"
-class="form-control"
-placeholder="Brand"
-required>
-
+<input type="text" name="brand" class="form-control" placeholder="Brand" required>
 </div>
-
 
 <div class="col-md-3">
+<input type="text" name="model" class="form-control" placeholder="Model" required>
+</div>
 
-<input
-type="text"
-name="model"
-class="form-control"
-placeholder="Model"
-required>
+<div class="col-md-2">
+<input type="number" name="price" class="form-control" placeholder="Price" required>
+</div>
+
+<div class="col-md-2">
+<input type="text" name="ram" class="form-control" placeholder="RAM (8GB)">
+</div>
+
+<div class="col-md-2">
+<input type="text" name="storage" class="form-control" placeholder="Storage (128GB)">
+</div>
 
 </div>
 
+<br>
 
-<div class="col-md-2">
+<div class="row">
 
-<input
-type="number"
-name="price"
-class="form-control"
-placeholder="Price"
-required>
-
+<div class="col-md-3">
+<input type="text" name="battery" class="form-control" placeholder="Battery (5000mAh)">
 </div>
 
-
-<div class="col-md-2">
-
-<input
-type="number"
-name="stock"
-class="form-control"
-placeholder="Stock"
-required>
-
+<div class="col-md-3">
+<input type="text" name="category" class="form-control" placeholder="Category (Android)">
 </div>
 
-
-<div class="col-md-2">
-
-<input
-type="file"
-name="image"
-class="form-control">
-
+<div class="col-md-3">
+<input type="file" name="image" class="form-control">
 </div>
 
 </div>
@@ -201,8 +182,6 @@ class="form-control">
 <button class="btn btn-dark mt-3">Add Product</button>
 
 </form>
-
-</div>
 
 
 

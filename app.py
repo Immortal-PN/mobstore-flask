@@ -443,7 +443,11 @@ def admin_dashboard():
         brand = request.form["brand"]
         model = request.form["model"]
         price = request.form["price"]
-        stock = request.form["stock"]
+
+        ram = request.form["ram"]
+        storage = request.form["storage"]
+        battery = request.form["battery"]
+        category = request.form["category"]
 
         image = request.files["image"]
         filename = ""
@@ -453,11 +457,12 @@ def admin_dashboard():
             image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         cur.execute("""
-            INSERT INTO products(brand,model,price,stock,image)
-            VALUES(%s,%s,%s,%s,%s)
-        """, (brand, model, price, stock, filename))
+            INSERT INTO products
+            (brand,model,price,image,ram,storage,battery,category)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
+        """,(brand,model,price,filename,ram,storage,battery,category))
 
-        conn.commit()
+    conn.commit()
 
     cur.execute("SELECT * FROM products ORDER BY id DESC")
     products = cur.fetchall()
