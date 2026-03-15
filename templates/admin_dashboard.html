@@ -15,38 +15,30 @@ font-family:Arial;
 }
 
 .sidebar{
-
 background:#111;
 height:100vh;
 color:white;
 padding:20px;
-
 }
 
 .sidebar a{
-
 color:white;
 display:block;
 margin-bottom:15px;
 text-decoration:none;
-
 }
 
 .card-box{
-
 background:white;
 padding:20px;
 border-radius:10px;
 box-shadow:0 5px 12px rgba(0,0,0,0.08);
-
 }
 
 .product-img{
-
 width:60px;
 height:60px;
 object-fit:contain;
-
 }
 
 </style>
@@ -139,11 +131,11 @@ object-fit:contain;
 
 <div class="row">
 
-<div class="col-md-3">
+<div class="col-md-2">
 <input type="text" name="brand" class="form-control" placeholder="Brand" required>
 </div>
 
-<div class="col-md-3">
+<div class="col-md-2">
 <input type="text" name="model" class="form-control" placeholder="Model" required>
 </div>
 
@@ -152,11 +144,15 @@ object-fit:contain;
 </div>
 
 <div class="col-md-2">
-<input type="text" name="ram" class="form-control" placeholder="RAM (8GB)">
+<input type="text" name="ram" class="form-control" placeholder="RAM">
 </div>
 
 <div class="col-md-2">
-<input type="text" name="storage" class="form-control" placeholder="Storage (128GB)">
+<input type="text" name="storage" class="form-control" placeholder="Storage">
+</div>
+
+<div class="col-md-2">
+<input type="text" name="battery" class="form-control" placeholder="Battery">
 </div>
 
 </div>
@@ -166,11 +162,7 @@ object-fit:contain;
 <div class="row">
 
 <div class="col-md-3">
-<input type="text" name="battery" class="form-control" placeholder="Battery (5000mAh)">
-</div>
-
-<div class="col-md-3">
-<input type="text" name="category" class="form-control" placeholder="Category (Android)">
+<input type="text" name="category" class="form-control" placeholder="Category">
 </div>
 
 <div class="col-md-3">
@@ -182,6 +174,8 @@ object-fit:contain;
 <button class="btn btn-dark mt-3">Add Product</button>
 
 </form>
+
+</div>
 
 
 
@@ -195,6 +189,7 @@ object-fit:contain;
 
 <thead>
 
+<tr>
 <th>ID</th>
 <th>Image</th>
 <th>Brand</th>
@@ -202,7 +197,10 @@ object-fit:contain;
 <th>Price</th>
 <th>RAM</th>
 <th>Storage</th>
+<th>Battery</th>
+<th>Category</th>
 <th>Action</th>
+</tr>
 
 </thead>
 
@@ -215,21 +213,27 @@ object-fit:contain;
 <td>{{product[0]}}</td>
 
 <td>
-<img src="/static/uploads/{{product[4]}}" class="product-img">
+<img src="{{ url_for('static', filename='uploads/' + product[4]) }}" class="product-img">
 </td>
 
 <td>{{product[1]}}</td>
+
 <td>{{product[2]}}</td>
+
 <td>₹{{product[3]}}</td>
+
 <td>{{product[5]}}</td>
+
 <td>{{product[6]}}</td>
 
-<a
-href="/delete_product/{{product[0]}}"
-class="btn btn-danger btn-sm">
+<td>{{product[7]}}</td>
 
+<td>{{product[8]}}</td>
+
+<td>
+
+<a href="/delete_product/{{product[0]}}" class="btn btn-danger btn-sm">
 Delete
-
 </a>
 
 </td>

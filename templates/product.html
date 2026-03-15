@@ -22,64 +22,45 @@ background:#111;
 color:white !important;
 }
 
-.product-container{
-
+.product-box{
 background:white;
 padding:40px;
 border-radius:12px;
 box-shadow:0 6px 18px rgba(0,0,0,0.08);
-
 }
 
 .product-image{
-
 width:100%;
-height:420px;
+max-height:420px;
 object-fit:contain;
-
-}
-
-.price{
-
-font-size:28px;
-font-weight:bold;
-color:#27ae60;
-
 }
 
 .brand{
-
-color:#777;
 font-size:14px;
+color:#777;
 }
 
-.stock{
-
-color:#2ecc71;
+.price{
+font-size:28px;
 font-weight:bold;
+color:#27ae60;
 }
 
 .btn-buy{
-
 background:#111;
 color:white;
-
 }
 
 .btn-buy:hover{
-
 background:#333;
 color:white;
-
 }
 
 .spec-box{
-
 background:#fafafa;
 border-radius:8px;
 padding:20px;
 margin-top:25px;
-
 }
 
 </style>
@@ -115,10 +96,28 @@ margin-top:25px;
 
 
 
+<div class="container mt-5">
+
+<div class="product-box">
+
+<div class="row">
+
+
+<!-- PRODUCT IMAGE -->
+
+<div class="col-md-6">
+
+<img
+src="{{ url_for('static', filename='uploads/' + product[4]) }}"
+class="product-image">
+
+</div>
+
+
+
 <!-- PRODUCT DETAILS -->
 
 <div class="col-md-6">
-<img src="/static/uploads/{{product[4]}}" class="product-image">
 
 <p class="brand">{{product[1]}}</p>
 
@@ -126,28 +125,22 @@ margin-top:25px;
 
 <p class="price mt-3">₹{{product[3]}}</p>
 
-</p>
-
 
 <div class="mt-4">
 
-<a
-href="/add_to_cart/{{product[0]}}"
-class="btn btn-dark me-2">
-
+<a href="/add_to_cart/{{product[0]}}" class="btn btn-dark me-2">
 Add To Cart
-
 </a>
 
-<a
-href="/checkout"
-class="btn btn-buy">
-
+<a href="/checkout" class="btn btn-buy">
 Buy Now
-
 </a>
 
 </div>
+
+
+
+<!-- SPECIFICATIONS -->
 
 <div class="spec-box">
 
@@ -155,41 +148,17 @@ Buy Now
 
 <ul>
 
-<li>Brand : {{product[1]}}</li>
+<li><b>Brand:</b> {{product[1]}}</li>
 
-<li>Model : {{product[2]}}</li>
+<li><b>Model:</b> {{product[2]}}</li>
 
-<li>RAM : {{product[5]}}</li>
+<li><b>RAM:</b> {{product[5]}}</li>
 
-<li>Storage : {{product[6]}}</li>
+<li><b>Storage:</b> {{product[6]}}</li>
 
-<li>Battery : {{product[7]}}</li>
+<li><b>Battery:</b> {{product[7]}}</li>
 
-<li>Category : {{product[8]}}</li>
-
-</ul>
-
-</div>
-
-
-
-<!-- PRODUCT INFO -->
-
-<div class="spec-box">
-
-<h5>Product Information</h5>
-
-<ul>
-
-<li>Brand : {{product[1]}}</li>
-
-<li>Model : {{product[2]}}</li>
-
-<li>Price : ₹{{product[3]}}</li>
-
-<li>Available Stock : {{product[4]}}</li>
-
-<li>Official MobStore Warranty</li>
+<li><b>Category:</b> {{product[8]}}</li>
 
 </ul>
 
@@ -198,11 +167,13 @@ Buy Now
 
 </div>
 
-</div>
 
 </div>
 
 </div>
+
+</div>
+
 
 </body>
 </html>
