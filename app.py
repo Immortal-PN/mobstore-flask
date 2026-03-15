@@ -332,40 +332,34 @@ def service():
 # ADMIN LOGIN
 # ----------------------------
 
-@app.route("/admin",methods=["GET","POST"])
+@app.route("/admin", methods=["GET","POST"])
 def admin():
 
-    error=None
+    if request.method == "POST":
 
-    if request.method=="POST":
+        username = request.form["username"]
+        password = request.form["password"]
 
-        username=request.form["username"]
-        password=request.form["password"]
-
-        conn=connect()
-        cur=conn.cursor()
+        conn = connect()
+        cur = conn.cursor()
 
         cur.execute(
-        "SELECT username,password FROM admins WHERE username=%s",
-        (username,)
+            "SELECT username, password FROM admins WHERE username=%s",
+            (username,)
         )
 
-        admin=cur.fetchone()
+        admin = cur.fetchone()
 
         cur.close()
         conn.close()
 
         if admin:
-
-            # If using plain password in DB
-            if admin[1] == password:
+            if check_password_hash(admin[1], password):
 
                 session["admin"] = admin[0]
                 return redirect("/admin_dashboard")
 
-        error="Invalid username or password"
-
-    return render_template("admin_login.html", error=error)
+    return render_template("admin_login.html")
 
 
 # ----------------------------
