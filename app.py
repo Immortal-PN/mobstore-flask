@@ -4,10 +4,7 @@ import random
 import datetime
 import os
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
-
-from werkzeug.security import generate_password_hash
-print(generate_password_hash("admin123"))
+from werkzeug.security import generate_password_hash , check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -338,6 +335,8 @@ def service():
 @app.route("/admin",methods=["GET","POST"])
 def admin():
 
+    error=None
+
     if request.method=="POST":
 
         username=request.form["username"]
@@ -346,17 +345,27 @@ def admin():
         conn=connect()
         cur=conn.cursor()
 
-        cur.execute("SELECT * FROM admins WHERE username=%s",(username,))
+        cur.execute(
+        "SELECT username,password FROM admins WHERE username=%s",
+        (username,)
+        )
+
         admin=cur.fetchone()
 
         cur.close()
         conn.close()
 
-        if admin and check_password_hash(admin[2],password):
-            session["admin"]=username
-            return redirect("/admin_dashboard")
+        if admin:
 
-    return render_template("admin_login.html")
+            # If using plain password in DB
+            if admin[1] == password:
+
+                session["admin"] = admin[0]
+                return redirect("/admin_dashboard")
+
+        error="Invalid username or password"
+
+    return render_template("admin_login.html", error=error)
 
 
 # ----------------------------
