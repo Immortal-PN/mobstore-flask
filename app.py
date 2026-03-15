@@ -6,51 +6,71 @@ import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
+# =====================================
+# APP CONFIG
+# =====================================
+
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-# ----------------------------
+# =====================================
 # DATABASE CONNECTION
-# ----------------------------
+# =====================================
 
 def connect():
     database_url = os.environ.get("DATABASE_URL")
     return psycopg2.connect(database_url)
 
 
-# ----------------------------
+# =====================================
 # IMEI GENERATOR
-# ----------------------------
+# =====================================
 
 def generate_imei():
-    return str(random.randint(100000000000000,999999999999999))
+    return str(random.randint(100000000000000, 999999999999999))
 
 
-# ----------------------------
+# =====================================
 # LANDING PAGE
-# ----------------------------
+# =====================================
 
 @app.route("/")
 def landing():
     return render_template("landing.html")
 
 
-# ----------------------------
-# STORE PAGE
-# ----------------------------
+# =====================================
+# STORE PAGE + SEARCH
+# =====================================
 
 @app.route("/store")
 def store():
 
+    search = request.args.get("search")
+    brand = request.args.get("brand")
+
     conn = connect()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM products")
+    query = "SELECT * FROM products WHERE 1=1"
+    params = []
+
+    if search:
+        query += " AND model ILIKE %s"
+        params.append("%" + search + "%")
+
+    if brand:
+        query += " AND brand=%s"
+        params.append(brand)
+
+    cur.execute(query, params)
     products = cur.fetchall()
 
     cur.close()
@@ -59,9 +79,9 @@ def store():
     return render_template("home.html", products=products)
 
 
-# ----------------------------
+# =====================================
 # PRODUCT DETAILS
-# ----------------------------
+# =====================================
 
 @app.route("/product/<int:id>")
 def product(id):
@@ -69,7 +89,7 @@ def product(id):
     conn = connect()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM products WHERE id=%s",(id,))
+    cur.execute("SELECT * FROM products WHERE id=%s", (id,))
     product = cur.fetchone()
 
     cur.close()
@@ -78,58 +98,88 @@ def product(id):
     return render_template("product.html", product=product)
 
 
-# ----------------------------
-# ADD TO CART
-# ----------------------------
+# =====================================
+# ADD TO CART (DATABASE CART)
+# =====================================
 
 @app.route("/add_to_cart/<int:id>")
 def add_to_cart(id):
 
-    if "cart" not in session:
-        session["cart"] = {}
+    if "user_id" not in session:
+        return redirect("/login")
 
-    cart = session["cart"]
-
-    if str(id) in cart:
-        cart[str(id)] += 1
-    else:
-        cart[str(id)] = 1
-
-    session["cart"] = cart
-
-    return redirect("/cart")
-
-
-# ----------------------------
-# CART PAGE
-# ----------------------------
-
-@app.route("/cart")
-def cart():
-
-    cart = session.get("cart",{})
+    user_id = session["user_id"]
 
     conn = connect()
     cur = conn.cursor()
 
+    cur.execute(
+        "SELECT id,quantity FROM cart WHERE user_id=%s AND product_id=%s",
+        (user_id, id)
+    )
+
+    item = cur.fetchone()
+
+    if item:
+        cur.execute(
+            "UPDATE cart SET quantity=quantity+1 WHERE id=%s",
+            (item[0],)
+        )
+    else:
+        cur.execute(
+            "INSERT INTO cart(user_id,product_id,quantity) VALUES(%s,%s,%s)",
+            (user_id, id, 1)
+        )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return redirect("/cart")
+
+
+# =====================================
+# CART PAGE
+# =====================================
+
+@app.route("/cart")
+def cart():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    conn = connect()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT products.id,products.brand,products.model,products.price,products.image,cart.quantity
+        FROM cart
+        JOIN products ON cart.product_id = products.id
+        WHERE cart.user_id=%s
+    """, (user_id,))
+
+    rows = cur.fetchall()
+
     items = []
     total = 0
 
-    for pid,qty in cart.items():
+    for r in rows:
 
-        cur.execute("SELECT * FROM products WHERE id=%s",(pid,))
-        product = cur.fetchone()
+        subtotal = r[3] * r[5]
+        total += subtotal
 
-        if product:
-
-            subtotal = product[3] * qty
-            total += subtotal
-
-            items.append({
-                "product":product,
-                "qty":qty,
-                "subtotal":subtotal
-            })
+        items.append({
+            "id": r[0],
+            "brand": r[1],
+            "model": r[2],
+            "price": r[3],
+            "image": r[4],
+            "qty": r[5],
+            "subtotal": subtotal
+        })
 
     cur.close()
     conn.close()
@@ -137,24 +187,21 @@ def cart():
     return render_template("cart.html", items=items, total=total)
 
 
-# ----------------------------
-# CHECKOUT
-# ----------------------------
+# =====================================
+# REMOVE FROM CART
+# =====================================
 
-@app.route("/checkout/<int:id>")
-def checkout(id):
+@app.route("/remove_cart/<int:id>")
+def remove_cart(id):
 
-    imei = generate_imei()
+    user_id = session["user_id"]
 
     conn = connect()
     cur = conn.cursor()
 
-    cur.execute("SELECT price FROM products WHERE id=%s",(id,))
-    price = cur.fetchone()[0]
-
     cur.execute(
-        "INSERT INTO orders(user_email,product_id,quantity,total_price,imei) VALUES(%s,%s,%s,%s,%s)",
-        ("guest",id,1,price,imei)
+        "DELETE FROM cart WHERE user_id=%s AND product_id=%s",
+        (user_id, id)
     )
 
     conn.commit()
@@ -162,19 +209,75 @@ def checkout(id):
     cur.close()
     conn.close()
 
+    return redirect("/cart")
+
+
+# =====================================
+# CHECKOUT (CREATE ORDER)
+# =====================================
+
+@app.route("/checkout")
+def checkout():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    conn = connect()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT products.id,products.price,cart.quantity
+        FROM cart
+        JOIN products ON cart.product_id=products.id
+        WHERE cart.user_id=%s
+    """, (user_id,))
+
+    items = cur.fetchall()
+
+    total = 0
+
+    for item in items:
+        total += item[1] * item[2]
+
+    cur.execute(
+        "INSERT INTO orders(user_id,total_price,status,created_at) VALUES(%s,%s,%s,%s) RETURNING id",
+        (user_id, total, "Pending", datetime.datetime.now())
+    )
+
+    order_id = cur.fetchone()[0]
+
+    for item in items:
+
+        imei = generate_imei()
+
+        cur.execute("""
+            INSERT INTO order_items(order_id,product_id,quantity,price,imei)
+            VALUES(%s,%s,%s,%s,%s)
+        """, (order_id, item[0], item[2], item[1], imei))
+
+    cur.execute("DELETE FROM cart WHERE user_id=%s", (user_id,))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
     order = {
-        "imei": imei,
-        "date": datetime.date.today()
+        "order_id": order_id,
+        "date": datetime.date.today(),
+        "total": total
     }
 
     return render_template("invoice.html", order=order)
 
 
-# ----------------------------
+# =====================================
 # USER REGISTER
-# ----------------------------
+# =====================================
 
-@app.route("/register",methods=["GET","POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
 
     if request.method == "POST":
@@ -187,8 +290,8 @@ def register():
         cur = conn.cursor()
 
         cur.execute(
-        "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
-        (name,email,password)
+            "INSERT INTO users(name,email,password_hash) VALUES(%s,%s,%s)",
+            (name, email, password)
         )
 
         conn.commit()
@@ -201,11 +304,11 @@ def register():
     return render_template("register.html")
 
 
-# ----------------------------
+# =====================================
 # USER LOGIN
-# ----------------------------
+# =====================================
 
-@app.route("/login",methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
 
     error = None
@@ -218,14 +321,21 @@ def login():
         conn = connect()
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM users WHERE email=%s",(email,))
+        cur.execute(
+            "SELECT id,email,password_hash FROM users WHERE email=%s",
+            (email,)
+        )
+
         user = cur.fetchone()
 
         cur.close()
         conn.close()
 
-        if user and check_password_hash(user[3],password):
-            session["user"] = user[2]
+        if user and check_password_hash(user[2], password):
+
+            session["user_id"] = user[0]
+            session["user_email"] = user[1]
+
             return redirect("/store")
 
         error = "Invalid login credentials"
@@ -233,16 +343,28 @@ def login():
     return render_template("login.html", error=error)
 
 
-# ----------------------------
-# SERVICE CENTER
-# ----------------------------
+# =====================================
+# LOGOUT
+# =====================================
 
-@app.route("/service",methods=["GET","POST"])
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect("/")
+
+
+# =====================================
+# SERVICE CENTER
+# =====================================
+
+@app.route("/service", methods=["GET", "POST"])
 def service():
 
-    message=""
+    message = ""
 
-    if request.method=="POST":
+    if request.method == "POST":
 
         imei = request.form["imei"]
         issue = request.form["problem"]
@@ -251,25 +373,25 @@ def service():
         cur = conn.cursor()
 
         cur.execute(
-        "INSERT INTO service_requests(imei,issue) VALUES(%s,%s)",
-        (imei,issue)
+            "INSERT INTO service_requests(imei,issue,status) VALUES(%s,%s,%s)",
+            (imei, issue, "Pending")
         )
 
         conn.commit()
 
-        message="Service request submitted."
+        message = "Service request submitted."
 
         cur.close()
         conn.close()
 
-    return render_template("service.html",message=message)
+    return render_template("service.html", message=message)
 
 
-# ----------------------------
+# =====================================
 # ADMIN LOGIN
-# ----------------------------
+# =====================================
 
-@app.route("/admin", methods=["GET","POST"])
+@app.route("/admin", methods=["GET", "POST"])
 def admin():
 
     error = None
@@ -295,6 +417,7 @@ def admin():
         if admin and check_password_hash(admin[1], password):
 
             session["admin"] = admin[0]
+
             return redirect("/admin_dashboard")
 
         error = "Invalid username or password"
@@ -302,11 +425,11 @@ def admin():
     return render_template("admin_login.html", error=error)
 
 
-# ----------------------------
+# =====================================
 # ADMIN DASHBOARD
-# ----------------------------
+# =====================================
 
-@app.route("/admin_dashboard", methods=["GET","POST"])
+@app.route("/admin_dashboard", methods=["GET", "POST"])
 def admin_dashboard():
 
     if "admin" not in session:
@@ -320,6 +443,7 @@ def admin_dashboard():
         brand = request.form["brand"]
         model = request.form["model"]
         price = request.form["price"]
+        stock = request.form["stock"]
 
         image = request.files["image"]
         filename = ""
@@ -328,25 +452,44 @@ def admin_dashboard():
             filename = secure_filename(image.filename)
             image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-        cur.execute(
-            "INSERT INTO products(brand,model,price,image) VALUES(%s,%s,%s,%s)",
-            (brand, model, price, filename)
-        )
+        cur.execute("""
+            INSERT INTO products(brand,model,price,stock,image)
+            VALUES(%s,%s,%s,%s,%s)
+        """, (brand, model, price, stock, filename))
 
         conn.commit()
 
-    cur.execute("SELECT * FROM products")
+    cur.execute("SELECT * FROM products ORDER BY id DESC")
     products = cur.fetchall()
+
+    cur.execute("SELECT COUNT(*) FROM users")
+    users = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM orders")
+    orders = cur.fetchone()[0]
+
+    cur.execute("SELECT COALESCE(SUM(total_price),0) FROM orders")
+    revenue = cur.fetchone()[0]
 
     cur.close()
     conn.close()
 
-    return render_template("admin_dashboard.html", products=products)
+    stats = {
+        "users": users,
+        "orders": orders,
+        "revenue": revenue
+    }
+
+    return render_template(
+        "admin_dashboard.html",
+        products=products,
+        stats=stats
+    )
 
 
-# ----------------------------
+# =====================================
 # DELETE PRODUCT
-# ----------------------------
+# =====================================
 
 @app.route("/delete_product/<int:id>")
 def delete_product(id):
@@ -357,7 +500,7 @@ def delete_product(id):
     conn = connect()
     cur = conn.cursor()
 
-    cur.execute("DELETE FROM products WHERE id=%s",(id,))
+    cur.execute("DELETE FROM products WHERE id=%s", (id,))
     conn.commit()
 
     cur.close()
@@ -366,21 +509,142 @@ def delete_product(id):
     return redirect("/admin_dashboard")
 
 
-# ----------------------------
+# =====================================
 # ADMIN LOGOUT
-# ----------------------------
+# =====================================
 
 @app.route("/admin_logout")
 def admin_logout():
 
-    session.pop("admin",None)
+    session.pop("admin", None)
 
     return redirect("/admin")
 
 
-# ----------------------------
+
+@app.route("/setup_database")
+def setup_database():
+
+    conn = connect()
+    cur = conn.cursor()
+
+    # USERS
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(120) UNIQUE,
+        password_hash TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # ADMINS
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS admins(
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100),
+        password TEXT
+    )
+    """)
+
+    # PRODUCTS
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS products(
+        id SERIAL PRIMARY KEY,
+        brand VARCHAR(100),
+        model VARCHAR(200),
+        price NUMERIC,
+        stock INT DEFAULT 10,
+        image TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # CART
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS cart(
+        id SERIAL PRIMARY KEY,
+        user_id INT,
+        product_id INT,
+        quantity INT DEFAULT 1
+    )
+    """)
+
+    # ORDERS
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS orders(
+        id SERIAL PRIMARY KEY,
+        user_id INT,
+        total_price NUMERIC,
+        status VARCHAR(50),
+        created_at TIMESTAMP
+    )
+    """)
+
+    # ORDER ITEMS
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS order_items(
+        id SERIAL PRIMARY KEY,
+        order_id INT,
+        product_id INT,
+        quantity INT,
+        price NUMERIC,
+        imei VARCHAR(50)
+    )
+    """)
+
+    # SERVICE REQUESTS
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS service_requests(
+        id SERIAL PRIMARY KEY,
+        imei VARCHAR(50),
+        issue TEXT,
+        status VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return "Database tables created successfully!"
+
+
+@app.route("/create_admin")
+def create_admin():
+
+    conn = connect()
+    cur = conn.cursor()
+
+    password = generate_password_hash("admin123")
+
+    cur.execute("""
+        INSERT INTO admins(username,password)
+        VALUES(%s,%s)
+    """,("admin",password))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return "Admin created"
+
+
+
+
+
+
+
+
+
+
+# =====================================
 # RUN APP
-# ----------------------------
+# =====================================
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
