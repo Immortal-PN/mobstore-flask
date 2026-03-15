@@ -2,44 +2,59 @@
 
 {% block content %}
 
-<h2>Admin Dashboard</h2>
+<h1 class="admin-title">Admin Dashboard</h1>
 
-<a href="/admin_logout">Logout</a>
+<div class="admin-container">
 
-<hr>
+<!-- PRODUCT FORM CARD -->
 
-<h3>Add Product</h3>
+<div class="admin-card">
 
-<form method="POST" enctype="multipart/form-data">
+<h2>Add New Product</h2>
 
-<input name="brand" placeholder="Brand" required>
-<br><br>
+<form method="POST" enctype="multipart/form-data" class="admin-form">
 
-<input name="model" placeholder="Model" required>
-<br><br>
+<div class="form-group">
+<label for="brand">Brand Name</label>
+<input type="text" id="brand" name="brand" placeholder="Enter brand name" required>
+</div>
 
-<input name="price" placeholder="Price" required>
-<br><br>
+<div class="form-group">
+<label for="model">Model Name</label>
+<input type="text" id="model" name="model" placeholder="Enter model name" required>
+</div>
 
-<input type="file" name="image" required>
-<br><br>
+<div class="form-group">
+<label for="price">Price (₹)</label>
+<input type="number" id="price" name="price" placeholder="Enter price" required>
+</div>
 
-<button>Add Product</button>
+<div class="form-group">
+<label for="image">Product Image</label>
+<input type="file" id="image" name="image" required>
+</div>
+
+<button type="submit">Add Product</button>
 
 </form>
 
-<hr>
+</div>
 
-<h3>Products</h3>
+<!-- PRODUCT TABLE CARD -->
 
-<table border="1">
+<div class="admin-card">
+
+<h2>Available Products</h2>
+
+<table class="admin-table">
 
 <tr>
 <th>ID</th>
 <th>Brand</th>
 <th>Model</th>
 <th>Price</th>
-<th>Action</th>
+<th>Image</th>
+<th>Actions</th>
 </tr>
 
 {% for p in products %}
@@ -47,12 +62,27 @@
 <tr>
 
 <td>{{p[0]}}</td>
+
 <td>{{p[1]}}</td>
+
 <td>{{p[2]}}</td>
-<td>{{p[3]}}</td>
+
+<td>₹{{p[3]}}</td>
 
 <td>
-<a href="/delete_product/{{p[0]}}">Delete</a>
+<img src="/static/uploads/{{p[4]}}" class="table-img">
+</td>
+
+<td>
+
+<a href="/edit_product/{{p[0]}}">
+<button>Edit</button>
+</a>
+
+<a href="/delete_product/{{p[0]}}">
+<button style="background:#ff4b5c;">Delete</button>
+</a>
+
 </td>
 
 </tr>
@@ -60,5 +90,9 @@
 {% endfor %}
 
 </table>
+
+</div>
+
+</div>
 
 {% endblock %}
