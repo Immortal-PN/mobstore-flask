@@ -202,18 +202,17 @@ def checkout():
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id = session["user_id"]
+    user_email = session["user_email"]
 
     conn = connect()
     cur = conn.cursor()
 
-    # get cart items
     cur.execute("""
         SELECT products.id, products.price, cart.quantity
         FROM cart
         JOIN products ON cart.product_id = products.id
         WHERE cart.user_id = %s
-    """,(user_id,))
+    """, (session["user_id"],))
 
     items = cur.fetchall()
 
@@ -223,32 +222,24 @@ def checkout():
     total = 0
 
     for item in items:
-        total += item[1] * item[2]
 
-    # create order
-    cur.execute("""
-        INSERT INTO orders (user_id, total_price, status)
-        VALUES (%s,%s,%s)
-        RETURNING id
-    """,(user_id,total,"Completed"))
+        product_id = item[0]
+        price = item[1]
+        qty = item[2]
 
-    order_id = cur.fetchone()[0]
-
-    # add order items
-    for item in items:
-
+        total = price * qty
         imei = generate_imei()
 
         cur.execute("""
-            INSERT INTO order_items
-            (order_id,product_id,quantity,price,imei)
-            VALUES (%s,%s,%s,%s,%s)
-        """,(order_id,item[0],item[2],item[1],imei))
+            INSERT INTO orders
+            (user_email, product_id, quantity, total_price, imei, order_date)
+            VALUES (%s,%s,%s,%s,%s,%s)
+        """,(user_email,product_id,qty,total,imei,datetime.datetime.now()))
 
     # clear cart
     cur.execute(
         "DELETE FROM cart WHERE user_id=%s",
-        (user_id,)
+        (session["user_id"],)
     )
 
     conn.commit()
@@ -257,7 +248,6 @@ def checkout():
     conn.close()
 
     order = {
-        "order_id": order_id,
         "date": datetime.date.today(),
         "total": total
     }
