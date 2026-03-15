@@ -24,6 +24,30 @@ def connect():
     return psycopg2.connect(os.environ["DATABASE_URL"])
 
 
+
+
+
+@app.route("/add_image_column")
+def add_image_column():
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT")
+    conn.commit()
+    cur.close()
+    conn.close()
+    return "column added"
+
+
+
+
+
+
+
+
+
+
+
+
 # ==============================
 # IMEI GENERATOR
 # ==============================
