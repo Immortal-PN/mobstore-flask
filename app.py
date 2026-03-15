@@ -411,6 +411,11 @@ def delete_product(id):
 
     return redirect("/admin_dashboard")
 
+@app.route("/setup_db")
+def setup_db():
+    init_db()
+    return "Database initialized"
+
 
 # ----------------------------
 # RUN APP
