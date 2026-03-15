@@ -95,10 +95,8 @@ def admin_dashboard():
         filename = ""
 
         if image and image.filename != "":
-
-         filename = secure_filename(image.filename)
-
-        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            filename = secure_filename(image.filename)
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         cur.execute(
             "INSERT INTO products(brand,model,price,image) VALUES(%s,%s,%s,%s)",
