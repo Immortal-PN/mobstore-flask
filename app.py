@@ -202,92 +202,67 @@ def checkout():
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id=session["user_id"]
+    user_id = session["user_id"]
 
-    conn=connect()
-    cur=conn.cursor()
+    conn = connect()
+    cur = conn.cursor()
 
+    # get cart items
     cur.execute("""
-        SELECT products.id,products.price,cart.quantity
+        SELECT products.id, products.price, cart.quantity
         FROM cart
-        JOIN products ON cart.product_id=products.id
-        WHERE cart.user_id=%s
+        JOIN products ON cart.product_id = products.id
+        WHERE cart.user_id = %s
     """,(user_id,))
 
-    items=cur.fetchall()
+    items = cur.fetchall()
 
-    if len(items)==0:
+    if not items:
         return redirect("/cart")
 
-    total=0
+    total = 0
 
     for item in items:
-        total+=item[1]*item[2]
+        total += item[1] * item[2]
 
     # create order
     cur.execute("""
-        INSERT INTO orders(user_id,total_price,status)
-        VALUES(%s,%s,%s) RETURNING id
+        INSERT INTO orders (user_id, total_price, status)
+        VALUES (%s,%s,%s)
+        RETURNING id
     """,(user_id,total,"Completed"))
 
-    order_id=cur.fetchone()[0]
+    order_id = cur.fetchone()[0]
 
-    # insert order items
+    # add order items
     for item in items:
 
-        imei=generate_imei()
+        imei = generate_imei()
 
         cur.execute("""
-            INSERT INTO order_items(order_id,product_id,quantity,price,imei)
-            VALUES(%s,%s,%s,%s,%s)
+            INSERT INTO order_items
+            (order_id,product_id,quantity,price,imei)
+            VALUES (%s,%s,%s,%s,%s)
         """,(order_id,item[0],item[2],item[1],imei))
 
     # clear cart
-    cur.execute("DELETE FROM cart WHERE user_id=%s",(user_id,))
+    cur.execute(
+        "DELETE FROM cart WHERE user_id=%s",
+        (user_id,)
+    )
 
     conn.commit()
 
     cur.close()
     conn.close()
 
-    order={
-        "order_id":order_id,
-        "date":datetime.date.today(),
-        "total":total
+    order = {
+        "order_id": order_id,
+        "date": datetime.date.today(),
+        "total": total
     }
 
-    return render_template("invoice.html",order=order)
-
-
-# ==============================
-# REGISTER
-# ==============================
-
-@app.route("/register",methods=["GET","POST"])
-def register():
-
-    if request.method=="POST":
-
-        name=request.form["name"]
-        email=request.form["email"]
-        password=generate_password_hash(request.form["password"])
-
-        conn=connect()
-        cur=conn.cursor()
-
-        cur.execute(
-            "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
-            (name,email,password)
-        )
-
-        conn.commit()
-
-        cur.close()
-        conn.close()
-
-        return redirect("/login")
-
-    return render_template("register.html")
+    return render_template("invoice.html", order=order)
 
 
 # ==============================
