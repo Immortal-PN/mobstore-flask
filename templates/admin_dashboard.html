@@ -195,15 +195,14 @@ object-fit:contain;
 
 <thead>
 
-<tr>
 <th>ID</th>
 <th>Image</th>
 <th>Brand</th>
 <th>Model</th>
 <th>Price</th>
-<th>Stock</th>
+<th>RAM</th>
+<th>Storage</th>
 <th>Action</th>
-</tr>
 
 </thead>
 
@@ -216,22 +215,14 @@ object-fit:contain;
 <td>{{product[0]}}</td>
 
 <td>
-
-<img
-src="/static/uploads/{{product[5]}}"
-class="product-img">
-
+<img src="/static/uploads/{{product[4]}}" class="product-img">
 </td>
 
 <td>{{product[1]}}</td>
-
 <td>{{product[2]}}</td>
-
 <td>₹{{product[3]}}</td>
-
-<td>{{product[4]}}</td>
-
-<td>
+<td>{{product[5]}}</td>
+<td>{{product[6]}}</td>
 
 <a
 href="/delete_product/{{product[0]}}"
