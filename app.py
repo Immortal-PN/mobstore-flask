@@ -353,11 +353,10 @@ def admin():
         cur.close()
         conn.close()
 
-        if admin:
-            if check_password_hash(admin[1], password):
+        if admin and check_password_hash(admin[1], password):
 
-                session["admin"] = admin[0]
-                return redirect("/admin_dashboard")
+            session["admin"] = admin[0]
+            return redirect("/admin_dashboard")
 
     return render_template("admin_login.html")
 
