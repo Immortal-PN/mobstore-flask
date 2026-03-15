@@ -144,14 +144,35 @@ MobStore
 
 <hr>
 
-<h5>IMEI Verification</h5>
+<div class="alert alert-success mt-3">
 
-<p>
+<h5>Your Warranty IMEI</h5>
 
-Each device purchased from MobStore is registered with a unique IMEI
-for authenticity and service verification.
+<input type="text"
+value="{{order.imei}}"
+id="imeiBox"
+class="form-control">
 
+<button onclick="copyIMEI()" class="btn btn-dark mt-2">
+Copy IMEI
+</button>
+
+<p class="mt-2 text-muted">
+Save this IMEI number. It is required to claim warranty service.
 </p>
+
+</div>
+
+<script>
+
+function copyIMEI(){
+navigator.clipboard.writeText(
+document.getElementById("imeiBox").value
+);
+alert("IMEI copied successfully");
+}
+
+</script>
 
 
 <hr>

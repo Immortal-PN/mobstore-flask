@@ -69,6 +69,14 @@ def service():
 
     if request.method == "POST":
         imei = request.form.get("imei")
+
+        cur.execute("SELECT * FROM orders WHERE imei=%s",(imei,))
+        valid = cur.fetchone()
+
+        if not valid:
+            message = "Invalid IMEI. Warranty not found."
+            return render_template("service.html",message=message)
+
         issue = request.form.get("problem")
 
         conn = connect()
@@ -252,6 +260,8 @@ def checkout():
 
     total = 0
 
+    generated_imei = None
+
     for item in items:
 
         product_id = item[0]
@@ -259,13 +269,15 @@ def checkout():
         qty = item[2]
 
         total = price * qty
-        imei = generate_imei()
 
-        cur.execute("""
-            INSERT INTO orders
-            (user_email, product_id, quantity, total_price, imei, order_date)
-            VALUES (%s,%s,%s,%s,%s,%s)
-        """,(user_email,product_id,qty,total,imei,datetime.datetime.now()))
+    imei = generate_imei()
+    generated_imei = imei
+
+    cur.execute("""
+        INSERT INTO orders
+        (user_email, product_id, quantity, total_price, imei, order_date)
+        VALUES (%s,%s,%s,%s,%s,%s)
+    """,(user_email,product_id,qty,total,imei,datetime.datetime.now()))
 
     # clear cart
     cur.execute(
@@ -279,8 +291,9 @@ def checkout():
     conn.close()
 
     order = {
-        "date": datetime.date.today(),
-        "total": total
+    "date": datetime.date.today(),
+    "total": total,
+    "imei": generated_imei
     }
 
     return render_template("invoice.html", order=order)
