@@ -25,29 +25,6 @@ def connect():
 
 
 
-
-
-@app.route("/add_image_column")
-def add_image_column():
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT")
-    conn.commit()
-    cur.close()
-    conn.close()
-    return "column added"
-
-
-
-
-
-
-
-
-
-
-
-
 # ==============================
 # IMEI GENERATOR
 # ==============================
@@ -390,18 +367,18 @@ def admin_dashboard():
         battery=request.form["battery"]
         category=request.form["category"]
 
-        image=request.files["image"]
-        filename=""
+        image = request.files["image"]
+        image_data = None
 
-        if image and image.filename!="":
-            filename=secure_filename(image.filename)
-            image.save(os.path.join(app.config["UPLOAD_FOLDER"],filename))
+        if image and image.filename != "":
+            image_bytes = image.read()
+            image_data = base64.b64encode(image_bytes).decode("utf-8")
 
         cur.execute("""
-            INSERT INTO products
-            (brand,model,price,image,ram,storage,battery,category)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
-        """,(brand,model,price,filename,ram,storage,battery,category))
+        INSERT INTO products
+        (brand,model,price,image_data,ram,storage,battery,category)
+        VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
+        """,(brand,model,price,image_data,ram,storage,battery,category))
 
         conn.commit()
 
