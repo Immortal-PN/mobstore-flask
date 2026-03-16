@@ -23,6 +23,7 @@
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('store') }}">Store</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('service') }}">Service</a></li>
                         {% if session.get("user_id") %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('orders') }}">My Orders</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('cart') }}">Cart <span class="pill-count">{{ cart_count }}</span></a></li>
                         {% endif %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin') }}">Admin</a></li>

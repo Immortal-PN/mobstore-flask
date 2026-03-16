@@ -26,3 +26,12 @@ document.querySelectorAll("[data-copy-target]").forEach((button) => {
         }, 1600);
     });
 });
+
+document.querySelectorAll("[data-confirm]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+        const message = link.dataset.confirm || "Are you sure?";
+        if (!window.confirm(message)) {
+            event.preventDefault();
+        }
+    });
+});

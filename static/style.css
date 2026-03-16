@@ -489,6 +489,10 @@ textarea::placeholder {
     color: var(--muted);
 }
 
+.invoice-meta .stock-tag {
+    justify-self: end;
+}
+
 .page-intro {
     padding-top: 2rem;
 }
@@ -527,6 +531,13 @@ textarea::placeholder {
     height: 72px;
     border-radius: 18px;
     object-fit: cover;
+}
+
+.admin-service-item form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .narrow-form {

@@ -7,6 +7,7 @@ import psycopg2
 from psycopg2 import extras
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 try:
     import cloudinary
@@ -17,6 +18,11 @@ except ImportError:  # Optional in local development until dependencies are inst
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-me-in-production")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") == "production"
 
 
 DEFAULT_IMAGE = "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80"
@@ -348,6 +354,34 @@ def get_cart_summary(user_id):
         row["subtotal"] = subtotal
         items.append(row)
     return items, total
+
+
+def get_order_history(user_id):
+    orders = query_all(
+        """
+        SELECT
+            o.*,
+            COALESCE(SUM(oi.quantity), 0) AS units
+        FROM orders o
+        LEFT JOIN order_items oi ON oi.order_id = o.id
+        WHERE o.user_id = %s
+        GROUP BY o.id
+        ORDER BY o.order_date DESC
+        """,
+        (user_id,),
+    )
+
+    for order in orders:
+        order["items"] = query_all(
+            """
+            SELECT *
+            FROM order_items
+            WHERE order_id = %s
+            ORDER BY id ASC
+            """,
+            (order["id"],),
+        )
+    return orders
 
 
 @app.context_processor
@@ -682,6 +716,13 @@ def invoice(order_id):
     return render_template("invoice.html", order=order, items=items)
 
 
+@app.route("/orders")
+@login_required
+def orders():
+    user_orders = get_order_history(session["user_id"])
+    return render_template("orders.html", orders=user_orders)
+
+
 @app.route("/service", methods=["GET", "POST"])
 def service():
     if request.method == "POST":
@@ -867,8 +908,27 @@ def edit_product(product_id):
 @app.route("/delete_product/<int:product_id>")
 @admin_required
 def delete_product(product_id):
+    linked_order = query_one(
+        "SELECT id FROM order_items WHERE product_id = %s LIMIT 1",
+        (product_id,),
+    )
+    if linked_order:
+        flash("This product is linked to existing orders and cannot be deleted. Set stock to 0 or edit it instead.", "warning")
+        return redirect(url_for("admin_dashboard"))
+
     execute("DELETE FROM products WHERE id = %s", (product_id,))
     flash("Product deleted.", "info")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/order/<int:order_id>/status", methods=["POST"])
+@admin_required
+def update_order_status(order_id):
+    execute(
+        "UPDATE orders SET status = %s WHERE id = %s",
+        (request.form.get("status", "Completed"), order_id),
+    )
+    flash("Order status updated.", "success")
     return redirect(url_for("admin_dashboard"))
 
 
