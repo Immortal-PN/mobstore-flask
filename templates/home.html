@@ -1,182 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta charset="UTF-8">
-<title>MobStore - Store</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-
-body{
-background:#f5f6fa;
-font-family:Arial;
-}
-
-.navbar{
-background:#111;
-}
-
-.navbar a{
-color:white !important;
-}
-
-.search-bar{
-max-width:500px;
-}
-
-.product-card{
-
-background:white;
-border-radius:10px;
-padding:15px;
-transition:0.3s;
-box-shadow:0 4px 10px rgba(0,0,0,0.08);
-height:100%;
-}
-
-.product-card:hover{
-
-transform:translateY(-5px);
-box-shadow:0 10px 20px rgba(0,0,0,0.15);
-
-}
-
-.product-img{
-
-width:100%;
-height:200px;
-object-fit:contain;
-
-}
-
-.price{
-
-font-weight:bold;
-color:#27ae60;
-
-}
-
-.brand{
-
-font-size:14px;
-color:#777;
-
-}
-
-</style>
-
-</head>
-<body>
-
-
-<!-- NAVBAR -->
-
-<nav class="navbar navbar-expand-lg">
-
-<div class="container">
-
-<a class="navbar-brand text-white" href="/">MobStore</a>
-
-<div>
-
-<a href="/store" class="me-3">Store</a>
-
-<a href="/cart" class="me-3">Cart</a>
-
-{% if session.user_id %}
-<a href="/logout">Logout</a>
-{% else %}
-<a href="/login">Login</a>
-{% endif %}
-
-</div>
-
-</div>
-
-</nav>
-
-
-<!-- SEARCH + FILTER -->
-
-<div class="container mt-4">
-
-<div class="row mb-4">
-
-<div class="col-md-6">
-
-<form method="GET" action="/store">
-
-<input
-type="text"
-name="search"
-class="form-control"
-placeholder="Search phones...">
-
-</form>
-
-</div>
-
-
-<div class="col-md-3">
-
-<form method="GET" action="/store">
-
-<select name="brand" class="form-select" onchange="this.form.submit()">
-
-<option value="">All Brands</option>
-<option>Apple</option>
-<option>Samsung</option>
-<option>Xiaomi</option>
-<option>OnePlus</option>
-<option>Realme</option>
-
-</select>
-
-</form>
-
-</div>
-
-</div>
-
-
-<!-- PRODUCT GRID -->
-
-<div class="row">
-
-{% for product in products %}
-
-<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-
-<div class="product-card">
-
-<img src="data:image/jpeg;base64,{{product[9]}}" class="product-img">
-
-<p class="brand mt-2">{{product[1]}}</p>
-
-<h6>{{product[2]}}</h6>
-
-<p class="price">₹{{product[3]}}</p>
-
-<a href="/product/{{product[0]}}" class="btn btn-outline-dark btn-sm w-100 mb-2">
-View Details
-</a>
-
-<a href="/add_to_cart/{{product[0]}}" class="btn btn-dark btn-sm w-100">
-Add To Cart
-</a>
-
-</div>
-
-</div>
-
-{% endfor %}
-
-</div>
-
-</div>
-
-
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}MobStore | Store{% endblock %}
+{% block content %}
+<section class="container page-intro reveal">
+    <span class="eyebrow">Storefront</span>
+    <h1>Shop premium smartphones</h1>
+    <p>Everything here is connected to inventory, cart, checkout, and admin data.</p>
+</section>
+
+<section class="container section-block">
+    <form class="filter-bar reveal" method="GET">
+        <input type="text" name="search" value="{{ filters.search }}" placeholder="Search by brand, model, or feature">
+        <select name="brand">
+            <option value="">All brands</option>
+            {% for item in brands %}
+            <option value="{{ item.brand }}" {% if filters.brand == item.brand %}selected{% endif %}>{{ item.brand }}</option>
+            {% endfor %}
+        </select>
+        <select name="category">
+            <option value="">All categories</option>
+            {% for item in categories %}
+            <option value="{{ item.category }}" {% if filters.category == item.category %}selected{% endif %}>{{ item.category }}</option>
+            {% endfor %}
+        </select>
+        <select name="sort">
+            <option value="latest" {% if filters.sort == 'latest' %}selected{% endif %}>Latest</option>
+            <option value="price_low" {% if filters.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+            <option value="price_high" {% if filters.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+            <option value="brand" {% if filters.sort == 'brand' %}selected{% endif %}>Brand</option>
+        </select>
+        <button class="btn btn-dark" type="submit">Apply</button>
+    </form>
+
+    <div class="product-grid">
+        {% for product in products %}
+        <article class="product-card reveal">
+            <a class="card-media" href="{{ url_for('product', product_id=product.id) }}">
+                <img src="{{ product.image_url or '' }}" alt="{{ product.model }}">
+            </a>
+            <div class="card-body">
+                <div class="product-meta">
+                    <span class="product-brand">{{ product.brand }}</span>
+                    <span class="stock-tag {% if product.stock > 0 %}in-stock{% else %}out-stock{% endif %}">
+                        {% if product.stock > 0 %}{{ product.stock }} in stock{% else %}Sold out{% endif %}
+                    </span>
+                </div>
+                <h3>{{ product.model }}</h3>
+                <p>{{ product.description or 'Premium smartphone with standout performance and flagship styling.' }}</p>
+                <div class="spec-row">
+                    <span>{{ product.ram or 'NA' }}</span>
+                    <span>{{ product.storage or 'NA' }}</span>
+                    <span>{{ product.battery or 'NA' }}</span>
+                </div>
+                <div class="card-bottom">
+                    <strong>Rs {{ currency(product.price) }}</strong>
+                    <div class="button-row">
+                        <a class="btn btn-outline-light btn-sm" href="{{ url_for('product', product_id=product.id) }}">Details</a>
+                        <a class="btn btn-dark btn-sm" href="{{ url_for('add_to_cart', product_id=product.id) }}">Add to cart</a>
+                    </div>
+                </div>
+            </div>
+        </article>
+        {% else %}
+        <div class="empty-state reveal">
+            <h3>No products matched your filters.</h3>
+            <p>Try a broader search or clear the current brand/category filters.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

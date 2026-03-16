@@ -1,241 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta charset="UTF-8">
-<title>Admin Dashboard - MobStore</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-
-body{
-background:#f4f6f9;
-font-family:Arial;
-}
-
-.sidebar{
-background:#111;
-height:100vh;
-color:white;
-padding:20px;
-}
-
-.sidebar a{
-color:white;
-display:block;
-margin-bottom:15px;
-text-decoration:none;
-}
-
-.card-box{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 5px 12px rgba(0,0,0,0.08);
-}
-
-.product-img{
-width:60px;
-height:60px;
-object-fit:contain;
-border:1px solid #eee;
-border-radius:5px;
-}
-
-</style>
-
-</head>
-<body>
-
-<div class="container-fluid">
-<div class="row">
-
-
-<!-- SIDEBAR -->
-
-<div class="col-md-2 sidebar">
-
-<h4>MobStore</h4>
-
-<hr>
-
-<a href="/admin_dashboard">Dashboard</a>
-<a href="/store">View Store</a>
-<a href="/admin_logout">Logout</a>
-
-</div>
-
-
-
-<!-- MAIN CONTENT -->
-
-<div class="col-md-10 p-4">
-
-<h3 class="mb-4">Admin Dashboard</h3>
-
-
-
-<!-- ANALYTICS -->
-
-<div class="row mb-4">
-
-<div class="col-md-4">
-<div class="card-box text-center">
-<h5>Total Users</h5>
-<h3>{{stats.users}}</h3>
-</div>
-</div>
-
-<div class="col-md-4">
-<div class="card-box text-center">
-<h5>Total Orders</h5>
-<h3>{{stats.orders}}</h3>
-</div>
-</div>
-
-<div class="col-md-4">
-<div class="card-box text-center">
-<h5>Total Revenue</h5>
-<h3>₹{{stats.revenue}}</h3>
-</div>
-</div>
-
-</div>
-
-
-
-<!-- ADD PRODUCT -->
-
-<div class="card-box mb-4">
-
-<h5>Add Product</h5>
-
-<form method="POST" enctype="multipart/form-data">
-
-<div class="row">
-
-<div class="col-md-2">
-<input type="text" name="brand" class="form-control" placeholder="Brand" required>
-</div>
-
-<div class="col-md-2">
-<input type="text" name="model" class="form-control" placeholder="Model" required>
-</div>
-
-<div class="col-md-2">
-<input type="number" name="price" class="form-control" placeholder="Price" required>
-</div>
-
-<div class="col-md-2">
-<input type="text" name="ram" class="form-control" placeholder="RAM">
-</div>
-
-<div class="col-md-2">
-<input type="text" name="storage" class="form-control" placeholder="Storage">
-</div>
-
-<div class="col-md-2">
-<input type="text" name="battery" class="form-control" placeholder="Battery">
-</div>
-
-</div>
-
-<br>
-
-<div class="row">
-
-<div class="col-md-3">
-<input type="text" name="category" class="form-control" placeholder="Category">
-</div>
-
-<div class="col-md-3">
-<input type="file" name="image" class="form-control" required>
-</div>
-
-</div>
-
-<button class="btn btn-dark mt-3">Add Product</button>
-
-</form>
-
-</div>
-
-
-
-<!-- PRODUCT INVENTORY -->
-
-<div class="card-box">
-
-<h5>Product Inventory</h5>
-
-<table class="table mt-3">
-
-<thead>
-
-<tr>
-<th>ID</th>
-<th>Image</th>
-<th>Brand</th>
-<th>Model</th>
-<th>Price</th>
-<th>RAM</th>
-<th>Storage</th>
-<th>Battery</th>
-<th>Category</th>
-<th>Action</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for product in products %}
-
-<tr>
-
-<td>{{product[0]}}</td>
-
-<td>
-
-{% if product[9] %}
-<img src="data:image/jpeg;base64,{{product[9]}}" class="product-img">
-{% else %}
-<img src="https://via.placeholder.com/60" class="product-img">
-{% endif %}
-
-</td>
-
-<td>{{product[1]}}</td>
-<td>{{product[2]}}</td>
-<td>₹{{product[3]}}</td>
-<td>{{product[5]}}</td>
-<td>{{product[6]}}</td>
-<td>{{product[7]}}</td>
-<td>{{product[8]}}</td>
-
-<td>
-
-<a href="/delete_product/{{product[0]}}" class="btn btn-danger btn-sm">
-Delete
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-
-</div>
-</div>
-</div>
-
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}MobStore | Admin Dashboard{% endblock %}
+{% block content %}
+<section class="container page-intro reveal">
+    <span class="eyebrow">Admin Dashboard</span>
+    <h1>Store operations in one place</h1>
+    <p>Products, orders, revenue, and service requests are all connected to PostgreSQL.</p>
+</section>
+
+<section class="container section-block">
+    <div class="stat-grid">
+        <div class="glass-card reveal"><span>Total Users</span><strong>{{ stats.users }}</strong></div>
+        <div class="glass-card reveal"><span>Total Orders</span><strong>{{ stats.orders }}</strong></div>
+        <div class="glass-card reveal"><span>Inventory</span><strong>{{ stats.products }}</strong></div>
+        <div class="glass-card reveal"><span>Revenue</span><strong>Rs {{ currency(stats.revenue) }}</strong></div>
+    </div>
+</section>
+
+<section class="container section-block admin-grid">
+    <form class="glass-card reveal admin-form" method="POST" enctype="multipart/form-data">
+        <div class="section-heading compact">
+            <span class="eyebrow">Inventory</span>
+            <h2>Add product</h2>
+        </div>
+        <div class="form-grid">
+            <input type="text" name="brand" placeholder="Brand" required>
+            <input type="text" name="model" placeholder="Model" required>
+            <input type="number" name="price" placeholder="Price" min="0" required>
+            <input type="number" name="stock" placeholder="Stock" min="0" required>
+            <input type="text" name="ram" placeholder="RAM">
+            <input type="text" name="storage" placeholder="Storage">
+            <input type="text" name="battery" placeholder="Battery">
+            <input type="text" name="category" placeholder="Category">
+        </div>
+        <textarea name="description" rows="4" placeholder="Product description"></textarea>
+        <input type="url" name="image_url" placeholder="Image URL fallback">
+        <input type="file" name="image" accept="image/*">
+        <small class="muted-copy">
+            {% if cloudinary_enabled %}
+            Cloudinary upload is enabled. File uploads will be stored there.
+            {% else %}
+            Cloudinary is not configured. Use an image URL or add Cloudinary env vars on Railway.
+            {% endif %}
+        </small>
+        <button class="btn btn-dark" type="submit">Add product</button>
+    </form>
+
+    <div class="stack-panel">
+        <div class="glass-card reveal">
+            <div class="section-heading compact">
+                <span class="eyebrow">Recent Orders</span>
+                <h2>Latest activity</h2>
+            </div>
+            {% for order in orders %}
+            <div class="service-item">
+                <div>
+                    <strong>#{{ order.id }} · {{ order.user_email }}</strong>
+                    <p>{{ order.units }} units · {{ order.order_date.strftime('%d %b %Y') }}</p>
+                </div>
+                <span class="stock-tag in-stock">Rs {{ currency(order.total_price) }}</span>
+            </div>
+            {% else %}
+            <p class="muted-copy">No orders yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="glass-card reveal">
+            <div class="section-heading compact">
+                <span class="eyebrow">Support Queue</span>
+                <h2>Service requests</h2>
+            </div>
+            {% for item in service_requests %}
+            <div class="service-item admin-service-item">
+                <div>
+                    <strong>{{ item.imei }}</strong>
+                    <p>{{ item.issue }}</p>
+                </div>
+                <form method="POST" action="{{ url_for('update_service_status', request_id=item.id) }}">
+                    <select name="status">
+                        <option value="Pending" {% if item.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="In Progress" {% if item.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Resolved" {% if item.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    </select>
+                    <button class="btn btn-outline-light btn-sm" type="submit">Save</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="muted-copy">No service requests yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="container section-block">
+    <div class="glass-card reveal inventory-table-wrap">
+        <div class="section-heading compact">
+            <span class="eyebrow">Product Inventory</span>
+            <h2>Manage products</h2>
+        </div>
+        <div class="inventory-table">
+            <table class="table table-dark table-borderless align-middle">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Stock</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="inventory-product">
+                                <img src="{{ product.image_url or '' }}" alt="{{ product.model }}">
+                                <div>
+                                    <strong>{{ product.brand }} {{ product.model }}</strong>
+                                    <p>{{ product.ram or 'NA' }} / {{ product.storage or 'NA' }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.stock }}</td>
+                        <td>Rs {{ currency(product.price) }}</td>
+                        <td class="button-row">
+                            <a class="btn btn-outline-light btn-sm" href="{{ url_for('edit_product', product_id=product.id) }}">Edit</a>
+                            <a class="btn btn-danger btn-sm" href="{{ url_for('delete_product', product_id=product.id) }}">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

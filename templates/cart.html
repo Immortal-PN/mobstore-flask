@@ -1,225 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta charset="UTF-8">
-<title>Cart - MobStore</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-
-body{
-background:#f5f6fa;
-font-family:Arial;
-}
-
-.navbar{
-background:#111;
-}
-
-.navbar a{
-color:white !important;
-}
-
-.cart-box{
-
-background:white;
-border-radius:12px;
-padding:25px;
-box-shadow:0 6px 15px rgba(0,0,0,0.08);
-
-}
-
-.cart-img{
-
-width:80px;
-height:80px;
-object-fit:contain;
-
-}
-
-.summary-box{
-
-background:white;
-padding:25px;
-border-radius:12px;
-box-shadow:0 6px 15px rgba(0,0,0,0.08);
-
-}
-
-.checkout-btn{
-
-background:#111;
-color:white;
-width:100%;
-
-}
-
-.checkout-btn:hover{
-
-background:#333;
-color:white;
-
-}
-
-</style>
-
-</head>
-<body>
-
-
-
-<!-- NAVBAR -->
-
-<nav class="navbar navbar-expand-lg">
-
-<div class="container">
-
-<a class="navbar-brand text-white" href="/">MobStore</a>
-
-<div>
-
-<a href="/store" class="me-3">Store</a>
-<a href="/cart" class="me-3">Cart</a>
-
-{% if session.user_id %}
-<a href="/logout">Logout</a>
-{% else %}
-<a href="/login">Login</a>
-{% endif %}
-
-</div>
-
-</div>
-
-</nav>
-
-
-
-<div class="container mt-5">
-
-<div class="row">
-
-<!-- CART ITEMS -->
-
-<div class="col-md-8">
-
-<div class="cart-box">
-
-<h4 class="mb-4">Shopping Cart</h4>
-
-{% if items %}
-
-<table class="table align-middle">
-
-<thead>
-
-<tr>
-<th>Product</th>
-<th>Price</th>
-<th>Qty</th>
-<th>Subtotal</th>
-<th></th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for item in items %}
-
-<tr>
-
-<td>
-
-<div class="d-flex align-items-center">
-
-<img src="data:image/jpeg;base64,{{item.image_data}}" class="cart-img">
-
-<div>
-
-<b>{{item.brand}} {{item.model}}</b>
-
-</div>
-
-</div>
-
-</td>
-
-<td>₹{{item.price}}</td>
-
-<td>{{item.qty}}</td>
-
-<td>₹{{item.subtotal}}</td>
-
-<td>
-
-<a
-href="/remove_cart/{{item.id}}"
-class="btn btn-danger btn-sm">
-
-Remove
-
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-{% else %}
-
-<p>Your cart is empty.</p>
-
-<a href="/store" class="btn btn-dark mt-2">Go To Store</a>
-
-{% endif %}
-
-</div>
-
-</div>
-
-
-
-<!-- ORDER SUMMARY -->
-
-<div class="col-md-4">
-
-<div class="summary-box">
-
-<h5>Order Summary</h5>
-
-<hr>
-
-<div class="d-flex justify-content-between">
-
-<span>Total</span>
-<b>₹{{total}}</b>
-
-</div>
-
-<hr>
-
-<a href="/checkout" class="btn checkout-btn">
-
-Proceed To Checkout
-
-</a>
-
-</div>
-
-</div>
-
-
-</div>
-
-</div>
-
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}MobStore | Cart{% endblock %}
+{% block content %}
+<section class="container page-intro reveal">
+    <span class="eyebrow">Shopping Cart</span>
+    <h1>Review your order</h1>
+    <p>Adjust quantities, remove items, and continue to a connected checkout.</p>
+</section>
+
+<section class="container section-block">
+    <div class="cart-layout">
+        <div class="cart-list">
+            {% for item in items %}
+            <article class="glass-card cart-item reveal">
+                <img src="{{ item.image_url or '' }}" alt="{{ item.model }}">
+                <div class="cart-copy">
+                    <span class="product-brand">{{ item.brand }}</span>
+                    <h3>{{ item.model }}</h3>
+                    <p>Unit price: Rs {{ currency(item.price) }}</p>
+                </div>
+                <form class="cart-quantity" method="POST" action="{{ url_for('update_cart', product_id=item.product_id) }}">
+                    <label>Qty</label>
+                    <input type="number" name="quantity" min="1" max="{{ item.stock }}" value="{{ item.quantity }}">
+                    <button class="btn btn-outline-light btn-sm" type="submit">Update</button>
+                </form>
+                <div class="cart-total">
+                    <strong>Rs {{ currency(item.subtotal) }}</strong>
+                    <a class="text-link danger-link" href="{{ url_for('remove_cart', product_id=item.product_id) }}">Remove</a>
+                </div>
+            </article>
+            {% else %}
+            <div class="glass-card empty-state reveal">
+                <h3>Your cart is empty.</h3>
+                <p>Add a device from the store to start checkout.</p>
+                <a class="btn btn-dark" href="{{ url_for('store') }}">Back to store</a>
+            </div>
+            {% endfor %}
+        </div>
+        <aside class="glass-card summary-card reveal">
+            <span class="eyebrow">Order Summary</span>
+            <h3>Checkout ready</h3>
+            <div class="summary-row"><span>Items</span><strong>{{ items|length }}</strong></div>
+            <div class="summary-row"><span>Total</span><strong>Rs {{ currency(total) }}</strong></div>
+            <a class="btn btn-dark w-100 mt-3" href="{{ url_for('checkout') }}">Proceed to checkout</a>
+            <a class="btn btn-outline-light w-100 mt-2" href="{{ url_for('store') }}">Continue shopping</a>
+        </aside>
+    </div>
+</section>
+{% endblock %}

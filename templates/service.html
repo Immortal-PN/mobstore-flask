@@ -1,148 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+{% extends "base.html" %}
+{% block title %}MobStore | Service Center{% endblock %}
+{% block content %}
+<section class="container page-intro reveal">
+    <span class="eyebrow">After-Sales Support</span>
+    <h1>Warranty and service center</h1>
+    <p>Submit device issues using the order IMEI and review recent service activity.</p>
+</section>
 
-<meta charset="UTF-8">
-<title>Service Center - MobStore</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-
-body{
-background:#f5f6fa;
-font-family:Arial;
-}
-
-.navbar{
-background:#111;
-}
-
-.navbar a{
-color:white !important;
-}
-
-.service-box{
-
-background:white;
-padding:40px;
-border-radius:12px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);
-max-width:600px;
-margin:auto;
-
-}
-
-.title{
-
-text-align:center;
-margin-bottom:30px;
-
-}
-
-.btn-submit{
-
-background:#111;
-color:white;
-width:100%;
-
-}
-
-.btn-submit:hover{
-
-background:#333;
-color:white;
-
-}
-
-</style>
-
-</head>
-<body>
-
-<!-- NAVBAR -->
-
-<nav class="navbar navbar-expand-lg">
-
-<div class="container">
-
-<a class="navbar-brand text-white" href="/">MobStore</a>
-
-<div>
-
-<a href="/store" class="me-3">Store</a>
-<a href="/cart" class="me-3">Cart</a>
-<a href="/service" class="me-3">Service</a>
-
-{% if session.user_id %}
-<a href="/logout">Logout</a>
-{% else %}
-<a href="/login">Login</a>
-{% endif %}
-
-</div>
-
-</div>
-
-</nav>
-
-
-
-<div class="container mt-5">
-
-<div class="service-box">
-
-<h3 class="title">MobStore Service Center</h3>
-
-{% if message %}
-
-<div class="alert alert-success">
-{{message}}
-</div>
-
-{% endif %}
-
-<form method="POST">
-
-<div class="mb-3">
-
-<label class="form-label">Device IMEI</label>
-
-<input
-type="text"
-name="imei"
-class="form-control"
-placeholder="Enter device IMEI"
-required>
-
-</div>
-
-
-<div class="mb-3">
-
-<label class="form-label">Problem Description</label>
-
-<textarea
-name="problem"
-class="form-control"
-rows="4"
-placeholder="Describe the issue"
-required></textarea>
-
-</div>
-
-
-<button class="btn btn-submit">
-
-Submit Service Request
-
-</button>
-
-</form>
-
-</div>
-
-</div>
-
-</body>
-</html>
+<section class="container section-block">
+    <div class="service-layout">
+        <form class="glass-card service-form reveal" method="POST">
+            <h3>Submit service request</h3>
+            <label for="imei">Device IMEI</label>
+            <input id="imei" type="text" name="imei" placeholder="Enter your warranty IMEI" required>
+            <label for="problem">Problem description</label>
+            <textarea id="problem" name="problem" rows="5" placeholder="Describe the issue clearly" required></textarea>
+            <button class="btn btn-dark" type="submit">Submit request</button>
+        </form>
+        <div class="glass-card reveal">
+            <h3>Recent requests</h3>
+            {% if recent_requests %}
+                {% for item in recent_requests %}
+                <div class="service-item">
+                    <div>
+                        <strong>{{ item.imei }}</strong>
+                        <p>{{ item.issue }}</p>
+                    </div>
+                    <span class="stock-tag in-stock">{{ item.status }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="muted-copy">Login and submit a service request to see your activity history here.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
